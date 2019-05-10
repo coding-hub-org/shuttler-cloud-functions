@@ -6,8 +6,14 @@ import {
 } from "@google-cloud/firestore";
 import { Database, DataSnapshot } from "@firebase/database";
 const admin = require("firebase-admin");
+const serviceAccount = require("../serviceAccountKey.json");
 
-admin.initializeApp(functions.config().firebase);
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount),
+  databaseURL: "https://shuttler-p001.firebaseio.com"
+});
+
+// admin.initializeApp(functions.config().firebase);
 
 const firestore: Firestore = admin.firestore();
 const realtime: Database = admin.database();
@@ -32,7 +38,8 @@ exports.helloWorld = functions.https.onRequest(async (request, response) => {
 exports.sendNotification = functions.https.onRequest(
   async (request, response) => {
     // Check if location param is provided
-    if (request.params.location === undefined) {
+    console.log(request.query);
+    if (request.query.location === undefined) {
       response.status(400);
       response.send("Please specify the location");
       return;
@@ -41,36 +48,55 @@ exports.sendNotification = functions.https.onRequest(
     const tokens: string[] = [];
     const userRef = realtime.ref("/Users");
 
-    await userRef.once("value").then((snapshot: DataSnapshot) => {
-      snapshot.forEach((d: DataSnapshot) => {
-        if (d.val().notifications.notifyLocation === request.params.location) {
-          let tokenValues = d.val().notifications.tokens;
-          for (let property in tokenValues) {
-            if (
-              tokenValues.hasOwnProperty(property) &&
-              tokenValues.property == true
-            ) {
-              tokens.push(tokenValues.property);
+    await userRef
+      .once("value")
+      .then((snapshot: DataSnapshot) => {
+        snapshot.forEach((d: DataSnapshot) => {
+          if (d.val().notifications.notifyLocation === request.query.location) {
+            const tokenValues = d.val().notifications.tokens;
+            let index: number = 0;
+            for (const property in tokenValues) {
+              if (
+                tokenValues.hasOwnProperty(property) &&
+                Object.values(tokenValues)[index] === true
+              ) {
+                tokens.push(property);
+              }
+              index++;
             }
           }
-        }
+        });
+      })
+      .catch((error: any) => {
+        console.log(error);
+      });
+
+    if (tokens.length === 0) {
+      response.send("Token list is empty");
+      return;
+    }
+
+    console.log("tokens");
+    console.log(tokens);
+
+    const messages: any[] = [];
+
+    tokens.forEach((token: string) => {
+      messages.push({
+        notification: {
+          title: "Shuttler",
+          body: `Shuttle will be at ${
+            request.query.location
+          } in approximately 1 minute`
+        },
+        token: token
       });
     });
 
-    const message = {
-      data: { score: "850", time: "2:45" },
-      tokens: tokens
-    };
-
-    admin
-      .messaging()
-      .sendMulticast(message)
-      .then((mesRes: any) => {
-        console.log(mesRes.successCount + " messages were sent successfully");
-      });
+    await admin.messaging().sendAll(messages);
 
     console.log(tokens);
 
-    response.send("ngon");
+    response.send("Notifications sent");
   }
 );
