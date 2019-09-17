@@ -100,3 +100,19 @@ exports.sendNotification = functions.https.onRequest(
     response.send("Notifications sent");
   }
 );
+
+exports.makeAdmin = functions.https.onCall((data, context) => {
+  return admin.auth().getUserByEmail(data.email).then(user => {
+    return admin.auth().setCustomUserClaims(user.uid, {
+      admin: true
+    });
+  }).then(() => {
+    return {
+      message: `Success! ${data.email} was made an admin.`
+    }
+  }).catch((err: Error) => {
+    console.error(err);
+    return err;
+  });
+}
+)
