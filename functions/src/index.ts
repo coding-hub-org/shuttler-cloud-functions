@@ -102,7 +102,7 @@ exports.sendNotification = functions.https.onRequest(
 );
 
 exports.makeAdmin = functions.https.onCall((data, context) => {
-  return admin.auth().getUserByEmail(data.email).then(user => {
+  return admin.auth().getUserByEmail(data.email).then((user: { uid: any; }) => {
     return admin.auth().setCustomUserClaims(user.uid, {
       admin: true
     });
