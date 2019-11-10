@@ -45,11 +45,11 @@ export const removeAdmin = functions.https.onCall(async (data, context) => {
 			.delete();
 
 		return {
-			message: `Success! ${data.email} was made an admin.`
+			message: `Success! ${data.email} was removes as an admin.`
 		};
 	} catch (err) {
 		return {
-			message: `Failure! ${data.email} could not be made an admin.`
+			message: `Failure! ${data.email} could not be removed an admin.`
 		};
 	}
 });
