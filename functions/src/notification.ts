@@ -9,8 +9,6 @@ import { Database, DataSnapshot } from "@firebase/database";
 const admin = require("firebase-admin");
 // const serviceAccount from "../serviceAccountKey.json");
 
-admin.initializeApp();
-
 // {
 //   credential: admin.credential.cert(serviceAccount),
 //   databaseURL: "https://shuttler-p001.firebaseio.com"
