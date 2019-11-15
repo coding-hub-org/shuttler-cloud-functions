@@ -27,7 +27,9 @@ export const makeAdmin = functions.https.onCall(async (data, context) => {
 		};
 	} catch (err) {
 		return {
-			message: `Failure! ${data.email} could not be made an admin.`
+			error: {
+				message: `Failure! ${data.email} could not be made an admin.`
+			}
 		};
 	}
 });
@@ -49,7 +51,9 @@ export const removeAdmin = functions.https.onCall(async (data, context) => {
 		};
 	} catch (err) {
 		return {
-			message: `Failure! ${data.email} could not be removed an admin.`
+			error: {
+				message: `Failure! ${data.email} could not be removed an admin.`
+			}
 		};
 	}
 });
